@@ -7,9 +7,11 @@ import {
   projectForecast,
 } from './calc'
 import {
+  ADVERTISING_REVENUE_HINT,
   APPAREL_REVENUE_HINT,
   DEFAULT_STARTING_CASH,
   DEFAULT_START_MONTH,
+  EVENT_ADVERTISING_REVENUE_HINT,
   EVENTS_REVENUE_HINT,
   PAYROLL_SECTION_HINT,
   createDefaultState,
@@ -58,9 +60,21 @@ describe('blank-slate defaults', () => {
       'Production',
       'Apparel',
       'Events',
+      'Event advertising',
     ])
+    expect(state.revenueRows.find((r) => r.name === 'Advertising')?.hint).toBe(
+      ADVERTISING_REVENUE_HINT,
+    )
     expect(state.revenueRows.find((r) => r.name === 'Events')?.hint).toBe(
       EVENTS_REVENUE_HINT,
+    )
+    expect(state.revenueRows.find((r) => r.name === 'Event advertising')?.hint).toBe(
+      EVENT_ADVERTISING_REVENUE_HINT,
+    )
+    expect(EVENTS_REVENUE_HINT.toLowerCase()).not.toContain('sponsorship')
+    expect(ADVERTISING_REVENUE_HINT).toMatch(/Event advertising/)
+    expect(EVENT_ADVERTISING_REVENUE_HINT).toMatch(
+      /do not also enter it under Advertising or Events/i,
     )
     expect(state.revenueRows.find((r) => r.name === 'Apparel')?.hint).toBe(
       APPAREL_REVENUE_HINT,
@@ -154,6 +168,29 @@ describe('runway', () => {
 
     const marked = forecast.months.filter((m) => m.approximateShortfall)
     expect(marked.map((m) => m.month)).toEqual(['2026-12'])
+  })
+})
+
+describe('event advertising is separate from Events', () => {
+  it('counts the two rows independently', () => {
+    const state = withBudget({
+      revenueRows: [
+        { id: 'ads', name: 'Advertising', amounts: { '2026-11': 10 }, hint: '' },
+        { id: 'events', name: 'Events', amounts: { '2026-11': 100 }, hint: '' },
+        {
+          id: 'event-ads',
+          name: 'Event advertising',
+          amounts: { '2026-11': 40 },
+          hint: '',
+        },
+      ],
+    })
+    const forecast = projectForecast(state)
+    expect(forecast.months[0].revenueCollections).toBe(150)
+    expect(state.revenueRows.find((row) => row.name === 'Events')?.amounts['2026-11']).toBe(100)
+    expect(
+      state.revenueRows.find((row) => row.name === 'Event advertising')?.amounts['2026-11'],
+    ).toBe(40)
   })
 })
 

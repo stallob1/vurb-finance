@@ -463,7 +463,8 @@ export default function App() {
         </div>
         <p className="section-hint">
           Amounts are cash collected in that month. Use → to copy a value across
-          future months. Event sponsorship is entered once, on the Events row.
+          future months. Enter event advertising only on Event advertising, not
+          under Advertising or Events.
         </p>
         <div className="table-scroll">
           <table className="data-table revenue-table">

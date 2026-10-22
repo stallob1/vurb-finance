@@ -16,8 +16,16 @@ export const REFERENCE_BALANCE_MONTH = '2026-09'
 export const REFERENCE_BALANCE_LABEL =
   'September 2026 ending cash after uncleared items — reference balance.'
 
+export const ADVERTISING_REVENUE_HINT =
+  'Cash collected this month. Enter event advertising only on Event advertising, not under Advertising or Events.'
+
 export const EVENTS_REVENUE_HINT =
-  'Count event sponsorship once, under Events, not also under Advertising.'
+  'Event revenue collected this month, excluding event advertising.'
+
+export const EVENT_ADVERTISING_REVENUE_HINT =
+  'Event advertising collected this month; do not also enter it under Advertising or Events.'
+
+export const EVENT_ADVERTISING_ROW_NAME = 'Event advertising'
 
 export const APPAREL_REVENUE_HINT =
   "Enter only Vurb's cash distribution from the FMF partnership. FMF handles fulfillment and Vurb receives 50% of net profit. Do not treat gross retail sales as Vurb cash receipts or add merchandise COGS."
@@ -99,13 +107,11 @@ export function createDefaultState(): AppState {
       expense('Other expenses', startMonth),
     ],
     revenueRows: [
-      revenue(
-        'Advertising',
-        'Cash collected this month. Do not include event sponsorship; count it once under Events.',
-      ),
+      revenue('Advertising', ADVERTISING_REVENUE_HINT),
       revenue('Production', 'Cash collected this month.'),
       revenue('Apparel', APPAREL_REVENUE_HINT),
       revenue('Events', EVENTS_REVENUE_HINT),
+      revenue(EVENT_ADVERTISING_ROW_NAME, EVENT_ADVERTISING_REVENUE_HINT),
     ],
     otherCashRows: [
       other(
@@ -134,6 +140,27 @@ export function createDefaultState(): AppState {
 
 export function createRevenueRow(name = 'New revenue', hint = ''): RevenueRow {
   return revenue(name, hint)
+}
+
+/**
+ * Insert the Event advertising row at $0 when a saved budget does not have it.
+ * Existing rows, names, and amounts stay. Canonical hints are refreshed for
+ * Advertising, Events, and Event advertising.
+ */
+export function withEventAdvertisingRow(rows: RevenueRow[]): RevenueRow[] {
+  const next = rows.map((row) => {
+    if (row.name === 'Advertising') return { ...row, hint: ADVERTISING_REVENUE_HINT }
+    if (row.name === 'Events') return { ...row, hint: EVENTS_REVENUE_HINT }
+    if (row.name === EVENT_ADVERTISING_ROW_NAME) {
+      return { ...row, hint: EVENT_ADVERTISING_REVENUE_HINT }
+    }
+    return row
+  })
+  if (next.some((row) => row.name === EVENT_ADVERTISING_ROW_NAME)) return next
+  const added = revenue(EVENT_ADVERTISING_ROW_NAME, EVENT_ADVERTISING_REVENUE_HINT)
+  const eventsIndex = next.findIndex((row) => row.name === 'Events')
+  if (eventsIndex < 0) return [...next, added]
+  return [...next.slice(0, eventsIndex + 1), added, ...next.slice(eventsIndex + 1)]
 }
 
 export function createPayrollRow(): AppState['payroll'][number] {

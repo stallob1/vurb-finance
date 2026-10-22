@@ -1,4 +1,4 @@
-import { createDefaultState } from './defaults'
+import { createDefaultState, withEventAdvertisingRow } from './defaults'
 import type { AppState, OtherCashDirection } from './types'
 
 /** Vurb inputs only. Never read or write another app's storage key. */
@@ -81,18 +81,20 @@ export function loadState(): AppState {
             }
           })
         : defaults.expenseBuckets,
-      revenueRows: Array.isArray(parsed.revenueRows)
-        ? parsed.revenueRows.map((r, i) => {
-            const row = isRecord(r) ? r : {}
-            const d = defaults.revenueRows[i]
-            return {
-              id: asString(row.id, d?.id ?? `rev-${i}`),
-              name: asString(row.name, d?.name ?? `Revenue ${i + 1}`),
-              amounts: amountMap(row.amounts),
-              hint: asString(row.hint, d?.hint ?? ''),
-            }
-          })
-        : defaults.revenueRows,
+      revenueRows: withEventAdvertisingRow(
+        Array.isArray(parsed.revenueRows)
+          ? parsed.revenueRows.map((r, i) => {
+              const row = isRecord(r) ? r : {}
+              const d = defaults.revenueRows[i]
+              return {
+                id: asString(row.id, d?.id ?? `rev-${i}`),
+                name: asString(row.name, d?.name ?? `Revenue ${i + 1}`),
+                amounts: amountMap(row.amounts),
+                hint: asString(row.hint, ''),
+              }
+            })
+          : defaults.revenueRows,
+      ),
       otherCashRows: Array.isArray(parsed.otherCashRows)
         ? parsed.otherCashRows.map((r, i) => {
             const row = isRecord(r) ? r : {}
