@@ -44,7 +44,7 @@ function CashChart({
 }) {
   const width = 720
   const height = 220
-  const pad = { top: 16, right: 16, bottom: 36, left: 96 }
+  const pad = { top: 16, right: 36, bottom: 36, left: 96 }
   const innerW = width - pad.left - pad.right
   const innerH = height - pad.top - pad.bottom
 
